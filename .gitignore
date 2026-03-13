@@ -1,2 +1,34 @@
+# Dependências
+node_modules/
+jspm_packages/
+web_archiver/
+
+# Variáveis de Ambiente (CRÍTICO: nunca remova isso)
 .env
-node_modules
+.env.test
+.env.local
+.env.production
+
+# Logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+logs
+*.log
+
+# Editor / IDE
+.vscode/
+.idea/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+
+# Sistema Operacional
+DS_Store
+Thumbs.db
+
+# Build / Dist
+dist/
+build/
