@@ -2,8 +2,6 @@ import express from "express";
 import pool from "../config/db.js";
 const router = express.Router();
 
-// --- ROTA DO CARDÁPIO ---
-// Busca produtos e aceita filtro por categoria: /api/products?category=burgers
 router.get("/", async (req, res) => {
   const { category } = req.query;
   try {
@@ -25,18 +23,15 @@ router.get("/", async (req, res) => {
   }
 });
 
-// --- ROTA DO CHECKOUT (PEDIDOS) ---
-// Salva o cliente e os itens que ele comprou
+
 router.post("/checkout", async (req, res) => {
   const { customer_name, customer_whatsapp, items, total_price } = req.body;
 
-  // Iniciamos uma transação para garantir que o pedido só seja salvo se os itens também forem
   const client = await pool.connect();
 
   try {
     await client.query("BEGIN");
 
-    // 1. Insere o pedido principal na tabela 'orders'
     const orderQuery = `
             INSERT INTO orders (customer_name, customer_whatsapp, total_price, status) 
             VALUES ($1, $2, $3, 'pendente') 
@@ -49,7 +44,6 @@ router.post("/checkout", async (req, res) => {
     ]);
     const orderId = orderRes.rows[0].id;
 
-    // 2. Insere cada item do carrinho na tabela 'order_items'
     const itemQuery = `
             INSERT INTO order_items (order_id, product_id, quantity, unit_price) 
             VALUES ($1, $2, $3, $4)
