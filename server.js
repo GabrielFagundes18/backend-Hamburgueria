@@ -4,7 +4,7 @@ import productsRoutes from "./routes/products.js";
 import ordersRoutes from "./routes/orders.js";
 const app = express();
 app.use(cors({
-  origin: ["http://localhost:3000", "http://localhost:3001","hamburgueria-2mw1rmgp6-gabrielfagundesvv-6554s-projects.vercel.app"], // URLs dos seus dois projetos React
+  origin: ["http://localhost:3000", "http://localhost:3001","https://hamburgueria-2mw1rmgp6-gabrielfagundesvv-6554s-projects.vercel.app"], // URLs dos seus dois projetos React
   methods: ["GET", "POST", "PATCH", "DELETE"],
   credentials: true
 }));
