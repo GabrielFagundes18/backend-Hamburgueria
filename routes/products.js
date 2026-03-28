@@ -24,54 +24,6 @@ router.get("/", async (req, res) => {
 });
 
 
-router.post("/checkout", async (req, res) => {
-  const { customer_name, customer_whatsapp, items, total_price } = req.body;
-
-  const client = await pool.connect();
-
-  try {
-    await client.query("BEGIN");
-
-    const orderQuery = `
-            INSERT INTO orders (customer_name, customer_whatsapp, total_price, status) 
-            VALUES ($1, $2, $3, 'pendente') 
-            RETURNING id
-        `;
-    const orderRes = await client.query(orderQuery, [
-      customer_name,
-      customer_whatsapp,
-      total_price,
-    ]);
-    const orderId = orderRes.rows[0].id;
-
-    const itemQuery = `
-            INSERT INTO order_items (order_id, product_id, quantity, unit_price) 
-            VALUES ($1, $2, $3, $4)
-        `;
-
-    for (const item of items) {
-      await client.query(itemQuery, [
-        orderId,
-        item.id,
-        item.quantity,
-        item.price,
-      ]);
-    }
-
-    await client.query("COMMIT");
-    res.status(201).json({
-      success: true,
-      message: "Pedido Ninja recebido!",
-      orderId,
-    });
-  } catch (err) {
-    await client.query("ROLLBACK");
-    console.error("Erro ao processar checkout:", err);
-    res.status(500).json({ error: "Falha ao finalizar pedido" });
-  } finally {
-    client.release();
-  }
-});
 
 
 

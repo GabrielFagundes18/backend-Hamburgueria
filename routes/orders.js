@@ -2,7 +2,6 @@ import express from "express";
 import pool from "../config/db.js";
 const router = express.Router();
 
-
 router.get("/", async (req, res) => {
   const { category } = req.query;
   try {
@@ -22,19 +21,19 @@ router.get("/", async (req, res) => {
 });
 
 router.post("/checkout", async (req, res) => {
-  const { 
-    customer_name, 
-    customer_whatsapp, 
+  const {
+    customer_name,
+    customer_whatsapp,
     total_price,
-    cep, 
-    address_street, 
-    address_number, 
-    address_complement, 
-    address_neighborhood, 
-    payment_method, 
-    change_details, 
+    cep,
+    address_street,
+    address_number,
+    address_complement,
+    address_neighborhood,
+    payment_method,
+    change_details,
     notes,
-    items 
+    items,
   } = req.body;
 
   const client = await pool.connect();
@@ -42,6 +41,7 @@ router.post("/checkout", async (req, res) => {
   try {
     await client.query("BEGIN");
 
+   
     const orderQuery = `
       INSERT INTO orders (
         customer_name, 
@@ -55,23 +55,24 @@ router.post("/checkout", async (req, res) => {
         address_neighborhood, 
         payment_method, 
         change_details, 
-        notes
-      ) VALUES ($1, $2, $3, 'pendente', $4, $5, $6, $7, $8, $9, $10, $11) 
+        notes,
+        type
+      ) VALUES ($1, $2, $3, 'pendente', $4, $5, $6, $7, $8, $9, $10, $11, 'website') 
       RETURNING id
     `;
 
     const orderValues = [
-      customer_name, 
-      customer_whatsapp, 
-      total_price, 
-      cep, 
-      address_street, 
-      address_number, 
-      address_complement, 
-      address_neighborhood, 
-      payment_method, 
-      change_details, 
-      notes
+      customer_name,         
+      customer_whatsapp,     
+      total_price,           
+      cep,                  
+      address_street,        
+      address_number,       
+      address_complement || "",
+      address_neighborhood,   
+      payment_method,       
+      change_details || "N/A", 
+      notes || ""            
     ];
 
     const orderRes = await client.query(orderQuery, orderValues);
@@ -85,19 +86,18 @@ router.post("/checkout", async (req, res) => {
     for (const item of items) {
       await client.query(itemQuery, [
         orderId,
-        item.product_id,
+        item.product_id || item.id, 
         item.quantity,
-        item.price 
+        item.price,
       ]);
     }
 
     await client.query("COMMIT");
     res.status(201).json({ success: true, orderId });
-
   } catch (err) {
-    await client.query("ROLLBACK");
+    if (client) await client.query("ROLLBACK");
     console.error("ERRO AO SALVAR PEDIDO:", err);
-    res.status(500).json({ error: "Erro interno no servidor", details: err.message });
+    res.status(500).json({ error: "Erro interno", details: err.message });
   } finally {
     client.release();
   }
