@@ -21,6 +21,8 @@ router.get("/", async (req, res) => {
 });
 
 router.post("/checkout", async (req, res) => {
+  console.log("Dados recebidos no body:", req.body);
+
   const {
     customer_name,
     customer_whatsapp,
@@ -33,7 +35,7 @@ router.post("/checkout", async (req, res) => {
     payment_method,
     change_details,
     notes,
-    items,
+    items, 
   } = req.body;
 
   const client = await pool.connect();
@@ -41,8 +43,7 @@ router.post("/checkout", async (req, res) => {
   try {
     await client.query("BEGIN");
 
-   
-    const orderQuery = `
+     const orderQuery = `
       INSERT INTO orders (
         customer_name, 
         customer_whatsapp, 
@@ -62,17 +63,17 @@ router.post("/checkout", async (req, res) => {
     `;
 
     const orderValues = [
-      customer_name,         
-      customer_whatsapp,     
-      total_price,           
-      cep,                  
-      address_street,        
-      address_number,       
+      customer_name,
+      customer_whatsapp,
+      total_price,
+      cep,
+      address_street,
+      address_number,
       address_complement || "",
-      address_neighborhood,   
-      payment_method,       
-      change_details || "N/A", 
-      notes || ""            
+      address_neighborhood,
+      payment_method,
+      change_details || "N/A",
+      notes || "Sem observações"
     ];
 
     const orderRes = await client.query(orderQuery, orderValues);
@@ -84,9 +85,15 @@ router.post("/checkout", async (req, res) => {
     `;
 
     for (const item of items) {
+      const productId = item.product_id || item.id; 
+      
+      if (!productId) {
+        throw new Error("ID do produto não encontrado no item do carrinho");
+      }
+
       await client.query(itemQuery, [
         orderId,
-        item.product_id || item.id, 
+        productId,
         item.quantity,
         item.price,
       ]);
@@ -94,10 +101,16 @@ router.post("/checkout", async (req, res) => {
 
     await client.query("COMMIT");
     res.status(201).json({ success: true, orderId });
+
   } catch (err) {
     if (client) await client.query("ROLLBACK");
-    console.error("ERRO AO SALVAR PEDIDO:", err);
-    res.status(500).json({ error: "Erro interno", details: err.message });
+    
+    console.error("ERRO DETALHADO NO CHECKOUT:", err.message);
+    
+    res.status(500).json({ 
+      error: "Erro ao processar pedido", 
+      details: err.message 
+    });
   } finally {
     client.release();
   }
