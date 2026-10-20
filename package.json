@@ -6,7 +6,11 @@
   "license": "MIT",
   "scripts": {
     "start": "node server.js",
-    "dev": "nodemon server.js"
+    "dev": "nodemon server.js",
+    "db:setup": "node scripts/run-sql.js db/schema.sql db/seed.sql",
+    "db:rebuild:dry": "node scripts/rebuild-db.js --dry-run",
+    "db:rebuild": "node scripts/rebuild-db.js",
+    "db:restore-legacy": "node scripts/run-sql.js db/rebuild/restore-legacy.sql"
   },
   "dependencies": {
     "cors": "^2.8.6",
